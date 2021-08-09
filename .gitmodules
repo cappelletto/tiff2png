@@ -1,0 +1,3 @@
+[submodule "external/geotiff"]
+	path = external/geotiff
+	url = git@github.com:cappelletto/geotiff.git
