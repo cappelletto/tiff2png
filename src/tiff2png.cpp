@@ -94,6 +94,7 @@ int main(int argc, char *argv[])
         cout << yellow << "****** Summary **********************************" << reset << endl;
         cout << "Input file:    \t" << yellow << inputFileName << reset << endl;
         cout << "Output file:   \t" << green << outputFileName << reset << endl;
+        // TODO: implement export of transformed geoTIFF. (AGAIN? I think this was already implemented in previous releases)
         if (argExportTiff) 
             cout << "outputTIFF:    \t" << green << outputTIFF << reset << endl;; //extra geotiff copy to be exported
         cout << "validThreshold:\t" << yellow << validThreshold << reset << endl;
@@ -365,7 +366,32 @@ int main(int argc, char *argv[])
     OGRSpatialReference refUtm;
     refUtm.importFromProj4(layerProjection.c_str());   // original SRS
     OGRSpatialReference refGeo;
-    refGeo.SetWellKnownGeogCS("WGS84"); // target SRS
+
+    if (argCRS){ // switch to Mars Lat/Lon CRS IAU2000:49001
+        cout << light_yellow << "Using PROJ4 CRS definition for Mars as celestial body" << endl;
+        // +proj=longlat +a=3396190 +rf=169.894447223612 +no_defs +type=crs
+        // const char *crsIAU2000_49900 = "GEOGCRS["Mars 2000",
+        // DATUM["D_Mars_2000",
+        //     ELLIPSOID["Mars_2000_IAU_IAG",3396190,169.894447223612,
+        //         LENGTHUNIT["metre",1,
+        //             ID["EPSG",9001]]]],
+        // PRIMEM["Greenwich",0,
+        //     ANGLEUNIT["Decimal_Degree",0.0174532925199433]],
+        // CS[ellipsoidal,2],
+        //     AXIS["longitude",east,
+        //         ORDER[1],
+        //         ANGLEUNIT["Decimal_Degree",0.0174532925199433]],
+        //     AXIS["latitude",north,
+        //         ORDER[2],
+        //         ANGLEUNIT["Decimal_Degree",0.0174532925199433]]]
+
+        //         ";
+        refGeo.importFromProj4("+proj=longlat +a=3396190 +rf=169.894447223612 +no_defs +type=crs");
+    }
+    else{
+       refGeo.SetWellKnownGeogCS("WGS84"); // target CRS: Earth - default
+    }
+
     OGRCoordinateTransformation* coordTrans = OGRCreateCoordinateTransformation(&refUtm, &refGeo); // ask for a SRS transforming object
 
     double x = easting;

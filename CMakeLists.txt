@@ -50,6 +50,8 @@ else()
   return ()
 endif()
 
+find_package(Eigen3 3 REQUIRED)	# triggered some linking issues with OpenCV4.2 (sys/ROS) and user installed OpenCV 4.5
+
 # Find OpenCV, you may need to set OpenCV_DIR variable
 # to the absolute path to the directory containing OpenCVConfig.cmake file
 # OpenCV used for image conversion from bathmetry data to grayscale image (PNG)

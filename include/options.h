@@ -40,6 +40,8 @@ args::ValueFlag	<double>        argZMax(argParser,"meters", "Maximum input value
 args::ValueFlag	<double>        argValidThreshold(argParser,"ratio", "Minimum ratio of required valid pixels to generate PNG",{"valid_th"});
 args::Flag	         	        argGrayscale(argParser,   "",  "Export single channel 8-bit PNG instead of RGB", {"grayscale"});
 args::Flag	         	        argCsv(argParser,   "",  "Use comma ',' as column separator rather than TAB", {"csv"});
+// CRS and geoTIFF related flags
+args::Flag	         	        argCRS(argParser,  "",  "Switch Lat/Lon CRS from WGS84 (Earth) projection to IAU2000:49901 (Mars)", {"crs"});
 
 
 
