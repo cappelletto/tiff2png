@@ -1,10 +1,9 @@
 # Created by J. Cappelletto (cappelletto@gmail.com) for tiff2png module, part of Predicting seafloor landability
 # Ocean Perception Lab, University of Southampton
 # 2019-2021
+cmake_minimum_required(VERSION 3.18)  # future releases may require 3.20. Improved FindModules for GDAL, CGAL, TBB & CUDA toolkit
 
-cmake_minimum_required(VERSION 3.14)
-
-if(NOT DEFINED CMAKE_BUILD_TYPE) # Use Release mode as default (prioritize performance)
+if(NOT DEFINED CMAKE_BUILD_TYPE)
    set(CMAKE_BUILD_TYPE Release CACHE STRING
       "Choose the type of build, options are: None Debug Release RelWithDebug RelWithDebInfo MinSizeRel."
       FORCE)
@@ -19,16 +18,31 @@ if (${FORCE_COLORED_OUTPUT})
     endif ()
 endif ()
 
+if(NOT WIN32) # Adding some colour to your life, even if you are colour-blind
+  string(ASCII 27 Esc)
+  set(ColourReset "${Esc}[m")
+  set(ColourBold  "${Esc}[1m")
+  set(Red         "${Esc}[31m")
+  set(Green       "${Esc}[32m")
+  set(Yellow      "${Esc}[33m")
+  set(Blue        "${Esc}[34m")
+  set(Magenta     "${Esc}[35m")
+  set(Cyan        "${Esc}[36m")
+  set(White       "${Esc}[37m")
+  set(BoldRed     "${Esc}[1;31m")
+  set(BoldGreen   "${Esc}[1;32m")
+  set(BoldYellow  "${Esc}[1;33m")
+  set(BoldBlue    "${Esc}[1;34m")
+  set(BoldMagenta "${Esc}[1;35m")
+  set(BoldCyan    "${Esc}[1;36m")
+  set(BoldWhite   "${Esc}[1;37m")
+endif()
+
 # Define project name
 project(tiff2png_project)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread -mavx2") # AVX2 architecture pref.
 # Additional flags for vectorized/multithread profiling and/or debugging
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -O3 -shared-libgcc")
-
-# WARNING: CGAL / QT5 setup required this preproc
-# set(CMAKE_AUTOMOC ON)
-# set(CMAKE_AUTORCC ON)
-# set(CMAKE_AUTOUIC ON)
 
 find_package(OpenMP)  # no alternatives provided for OpenMP as MT framework, we stick to this one
 if(OPENMP_FOUND)
@@ -41,7 +55,7 @@ endif()
 # GDAL is used as driver for reading (and preserving) georef data
 find_package(GDAL 3.0 REQUIRED) # Newest releases of GDAL provide VERSION information
 if (GDAL_FOUND)
-  message(STATUS "GDAL found: ${GDAL_VERSION}")
+  message(STATUS "${BoldYellow}" "GDAL found: ${GDAL_VERSION}" "${ColourReset}")
   message(STATUS "    libraries: ${GDAL_LIBRARY}")
   message(STATUS "    include path: ${GDAL_INCLUDE_DIR}")
 else()
@@ -67,54 +81,11 @@ find_package(OpenCV 4.2 REQUIRED
 # Print some message showing some of them
 # At this level, it should be useful to check minimum required version or exact version
 # So far, there are still some issues with OpenCV installations included in ROS
-message(STATUS "OpenCV library status:")
+message(STATUS "${BoldYellow}" "OpenCV library status:" "${ColourReset}")
 message(STATUS "    version: ${OpenCV_VERSION}")
 message(STATUS "    libraries: ${OpenCV_LIBS}")
 message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 
-# Cross your fingers
-# find_package(CUDA)
-
-# if(CUDA_FOUND)
-#     INCLUDE(FindCUDA)
-#   # If the package has been found, several variables will
-#   # be set, you can find the full list with descriptions
-#   # in the CUDAConfig.cmake file.
-#   # Print some message showing some of them
-#   message(STATUS "CUDA library status:")
-#   message(STATUS "    toolkit root dir: ${CUDA_TOOLKIT_ROOT_DIR}")
-#   message(STATUS "    version: ${CUDA_VERSION}")
-#   message(STATUS "    libraries: ${CUDA_LIBRARIES}")
-#   message(STATUS "    include path: ${CUDA_INCLUDE_DIRS}")
-# endif(CUDA_FOUND)
-
-# #find_package(CGAL REQUIRED COMPONENTS Qt5 Core)
-# #CGAL_Qt5 is needed for the drawing.
-# find_package(CGAL REQUIRED OPTIONAL_COMPONENTS Qt5)
-
-# if(CGAL_Qt5_FOUND)  #required to use basic_viewer
-#   add_definitions(-DCGAL_USE_BASIC_VIEWER -DQT_NO_KEYWORDS)
-# endif()
-
-# if ( NOT CGAL_FOUND )
-#   message(STATUS "This project requires the CGAL library, and will not be compiled.")
-#   return()  
-# endif()
-
-# message(STATUS "CGAL library status:")
-# message(STATUS "    libraries: ${CGAL_LIBRARY}")
-# message(STATUS "    include path: ${CGAL_INCLUDE_DIR}")
-
-# include helper file
-# include( ${CGAL_USE_FILE} )
-
-#find_package(PCL REQUIRED COMPONENTS common io)
-
-# find_package( Boost REQUIRED ) # Boost and its components, required by CGAL
-# if ( NOT Boost_FOUND )
-#   message(STATUS "Required Boost library is missing. Project will not be compiled.")
-#   return()  
-# endif()
 
 # Add submodule as external/geotiff subdirectory. But we do not want to trigger its own CMake chain, so we just set the path
 #add_subdirectory(external/geotiff)
@@ -139,7 +110,6 @@ add_definitions( -DGIT_COMMIT="${GIT_INFO}" ) # Forward current git info as a si
 add_definitions( -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" ) # Forward current git info as a single string
 add_definitions(-DCGAL_USE_BASIC_VIEWER)
 
-
 ############################ TIFF2PNG ####################
 add_executable(tiff2png   src/tiff2png.cpp
                           ${GEOTIFF_MODULE}/src/geotiff.cpp
@@ -155,3 +125,5 @@ add_executable(tiff2png   src/tiff2png.cpp
 target_compile_options(tiff2png     PUBLIC -std=c++14 -mavx)
 target_link_libraries(tiff2png      ${OpenCV_LIBS} ${GDAL_LIBRARY} yaml-cpp)
 install (TARGETS tiff2png       DESTINATION $ENV{HOME}/bin)
+# copy scripts from scripts directory to $HOME/bin directory. Using PROGRAMS guarantees that execution bit is enabled
+install (PROGRAMS scripts/tiff.convert2png.sh DESTINATION $ENV{HOME}/bin)
