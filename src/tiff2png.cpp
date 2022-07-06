@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    cv::Mat rasterData;
+    cv::Mat rasterData(layerDimensions[1], layerDimensions[0], CV_64FC1);
     cv::Mat tiff(layerDimensions[1], layerDimensions[0], CV_64FC1); // cv container for tiff data . WARNING: cv::Mat constructor is failing to initialize with apData
     // cout << "Dim: [" << layerDimensions[0] << "x" << layerDimensions[1] << endl;
     for (int i = 0; i < layerDimensions[1]; i++)
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
     // updateStats();
     // return NO_ERROR;
 
-    cv::Mat rasterMask = cv::Mat(rasterData.size(), CV_8UC1); // create global valid_data maskthat won't be updated
+    cv::Mat rasterMask = cv::Mat(rasterData.size(), CV_64FC1); // create global valid_data maskthat won't be updated
     cv::compare(rasterData, noDataValue, rasterMask, CMP_NE); // ROI at the source data level
 
 //******************************************
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
 //******************************************
 
 
-    cv::Mat original;
+    cv::Mat original(rasterData.size(), CV_64FC1);
     cv::Mat mask = rasterMask.clone();
     rasterData.copyTo(original, mask); //copy only valid pixels, the rest should remain zero
     // now, we need to extract ROI for the given rotation and displacement (offset)
@@ -259,10 +259,20 @@ int main(int argc, char *argv[])
         cv::Mat final_roi = rotatedROI(bbox); // crop the final size image, already rotated    
         final_roi.copyTo(final);
     }
-    else{
+    else{ // argIntParam invoked, meaning we override rotation
         if (verbosity>=2)
           logc.warn("main", "Xfering input image to final container");
-        original.copyTo(final);
+
+        // Check if source and destination image sizes are different. If so, crop the source image to size_x and size_y.
+        if ((original.cols != xSize) || (original.rows != ySize)){
+            tlx = floor((original.cols - xSize)/2);
+            tly = floor((original.rows - ySize)/2);
+            cv::Mat crop_roi (original, cv::Rect2d(tlx, tly, xSize, ySize)); // the bbox size is twice the diagonal
+            crop_roi.copyTo(final);
+        }
+        else{
+            original.copyTo(final);
+        }
     }
 
     
@@ -318,9 +328,11 @@ int main(int argc, char *argv[])
     cv::Mat final_png;
     final.copyTo(final_png); //copy for normalization to 0-255. The source can be used to be exported as local bathymetry geoTIFF
     // 2.4) Scale to 128/max_value
-    double alfa = 128.0 / maxDepth; //fParam is the expected max value (higher, will be clipped)
+    double max_range = 65535.0/2.0;
+    double offset = max_range;
+    double alfa = max_range / maxDepth; //fParam is the expected max value (higher, will be clipped)
     final_png = final_png * alfa;   // we rescale the bathymetry onto 0-255, where 255 is reached when height = fParam
-    final_png = final_png + 127.0; // 1-bit bias. The new ZERO should be in 127
+    final_png = final_png + max_range; // 1-bit bias. The new ZERO should be in 127
     if (verbosity >= 2){
         double png_mean = (double) cv::sum(final_png).val[0] / (double) (final_png.cols * final_png.rows); 
         cv::minMaxLoc (final_png, &_min, &_max, 0, 0, final_mask); //debug
@@ -349,10 +361,12 @@ int main(int argc, char *argv[])
     if (proportion >= validThreshold){  // export if and only if it satisfies the minimum proportion of valid pixels. Set threshold to 0.0 to esport all images 
         // before exporting, we check the desired number of image channels (grayscale or RGB)
         if (!argGrayscale){ // we need to convert to RGB
-            final_png.convertTo(final_png, CV_8UC3);
+            final_png.convertTo(final_png, CV_16UC3);
             cv::cvtColor(final_png,final_png, COLOR_GRAY2RGB);
-
         }
+        else
+            final_png.convertTo(final_png, CV_16UC1);   // testing for PNG 16 bits single chanel
+
         cv::imwrite(outputFileName, final_png);
     //     final.copyTo(apLayer->rasterData); //update layer with extracted patch
     //     final_mask.copyTo(apLayer->rasterMask); //update layer mask with extracted patch
