@@ -84,8 +84,33 @@ int main(int argc, char *argv[])
     unsigned int ySize = 227; // vertical, column wise (positive down)
     if (argYSize) ySize = args::get(argYSize); // any value is valid. No validation is required
 
-    int outputChannels = 1; //default value for number of channel (1: Grayscale)
+    int bitsPerPixel = T2P_BPP8;
+    if (argOutputBitDepth){
+        // check user defined number of bits per pixel
+        int c = args::get(argOutputBitDepth);
+        if ((c == T2P_BPP8) || (c == T2P_BPP16))
+            bitsPerPixel = c;
+        else{
+            s << "Unknown/unsupported number of bits-per-pixel [" << yellow << c << reset << "]. Options are 8 & 16";
+            logc.error("main:argOutputChannels", s);
+            return -1;
+        }
+    }
 
+
+    int outputChannels = T2P_GRAYSCALE; //default value for number of channel (1: Grayscale)
+    if (argOutputChannels){
+        // check user defined value for argOutputChannels
+        int c = args::get(argOutputChannels);
+        if ((c == T2P_GRAYSCALE) || (c == T2P_RGB))
+            outputChannels = c;
+        else // unknown configuration for output channels. Print error message
+        {
+            s << "Unknown/unsupported number of channels [" << yellow << c << reset << "]. Options are 1 & 3";
+            logc.error("main:argOutputChannels", s);
+            return -1;
+        }
+    }
     // exported image size can be any positive value. if zero any of the dimensions, the it is assumed it will inherit the input image size for that dimension
     // potential silent bugs? maybe, if careless arg parsing is done during batch call from bash
     // minDepth < maxDepth
@@ -96,6 +121,8 @@ int main(int argc, char *argv[])
         cout << yellow << "****** Summary **********************************" << reset << endl;
         cout << "Input file:    \t" << yellow << inputFileName << reset << endl;
         cout << "Output file:   \t" << green << outputFileName << reset << endl;
+        s << "Output file format. Channels: " << outputChannels << "\tBits per pixel: " << bitsPerPixel;
+        logc.info ("main" , s);
         // TODO: implement export of transformed geoTIFF. (AGAIN? I think this was already implemented in previous releases)
         if (argExportTiff) 
             cout << "outputTIFF:    \t" << green << outputTIFF << reset << endl;; //extra geotiff copy to be exported
@@ -108,14 +135,6 @@ int main(int argc, char *argv[])
     }
 
     // // Step 1: Read input TIFF file
-
-    // LAD_LAYER
-    /**
-     * @brief 
-     * 
-     * @param name 
-     */
-    // int RasterLayer::readTIFF(std::string name){
 
     // create the container and the open input file
     Geotiff inputGeotiff(inputFileName.c_str());
@@ -361,18 +380,21 @@ int main(int argc, char *argv[])
 
 
     if (proportion >= validThreshold){  // export if and only if it satisfies the minimum proportion of valid pixels. Set threshold to 0.0 to esport all images 
-        // before exporting, we check the desired number of image channels (grayscale or RGB)
-        if (!argGrayscale){ // we need to convert to RGB
-            final_png.convertTo(final_png, CV_16UC3);
+        // before exporting, we check the desired number of image channels and bits per pixel
+        if (bitsPerPixel == T2P_BPP8){
+            final_png.convertTo(final_png, CV_8UC1);
+        }
+        else{
+            final_png.convertTo(final_png, CV_16UC1);
+        }
+
+        // last step: check if image needs to be converted to 3-channel (RGB-like) format
+        if (outputChannels == T2P_RGB){ // we need to convert to RGB
+            // final_png.convertTo(final_png, CV_16UC3);
             cv::cvtColor(final_png,final_png, COLOR_GRAY2RGB);
         }
-        else
-            final_png.convertTo(final_png, CV_16UC1);   // testing for PNG 16 bits single chanel
 
         cv::imwrite(outputFileName, final_png);
-    //     final.copyTo(apLayer->rasterData); //update layer with extracted patch
-    //     final_mask.copyTo(apLayer->rasterMask); //update layer mask with extracted patch
-    //     pipeline.exportLayer("M1_RAW_Bathymetry", outputTIFF, FMT_TIFF);
     }
 
     // Also we need the LAT LON in decimal degree to match oplab-pipeline and LGA input format
@@ -415,8 +437,8 @@ int main(int argc, char *argv[])
     
     cout.precision(std::numeric_limits<double>::digits10);    // maybe it's an overkill. Just in case
     int reprojected = coordTrans->Transform(1, &x, &y);
-    latitude  = x; // yes, this is not a bug, they are swapped 
-    longitude = y;
+    latitude  = y; // yes, this is not a bug, they are swapped 
+    longitude = x;
     delete coordTrans; // maybe can be removed as destructor and garbage collector will take care of this after return
     // Target HEADER (CSV)
     // relative_path	northing [m]	easting [m]	depth [m]	roll [deg]	pitch [deg]	heading [deg]	altitude [m]	timestamp [s]	latitude [deg]	longitude [deg]	x_velocity [m/s]	y_velocity [m/s]	z_velocity [m/s]

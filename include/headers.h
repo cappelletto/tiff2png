@@ -69,4 +69,7 @@ const std::string highlight("\033[30;43m");
 #define T2P_GRAYSCALE 1
 #define T2P_RGB       3
 
+#define T2P_BPP8    8
+#define T2P_BPP16   16
+
 #endif // _PROJECT_HEADERS_H_
