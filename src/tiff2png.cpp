@@ -84,6 +84,8 @@ int main(int argc, char *argv[])
     unsigned int ySize = 227; // vertical, column wise (positive down)
     if (argYSize) ySize = args::get(argYSize); // any value is valid. No validation is required
 
+    int outputChannels = 1; //default value for number of channel (1: Grayscale)
+
     // exported image size can be any positive value. if zero any of the dimensions, the it is assumed it will inherit the input image size for that dimension
     // potential silent bugs? maybe, if careless arg parsing is done during batch call from bash
     // minDepth < maxDepth

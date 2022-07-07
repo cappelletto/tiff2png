@@ -12,10 +12,6 @@
 
 #define _PROJECT_HEADERS_H_
 
-// debug-profiling helpers for CGAL ops (bottleneck)
-// #define CGAL_PROFILE
-// #include <CGAL/Profile_counter.h>
-
 ///Basic C and C++ libraries
 #include <iostream>
 #include <iomanip>
@@ -69,34 +65,8 @@ const std::string highlight("\033[30;43m");
 #define DEFAULT_OUTPUT_FILE "LAD_output.tif"
 #define DEFAULT_WINDOW_WIDTH 800
 #define DEFAULT_WINDOW_HEIGHT 600
-#define WATER_DENSITY 1025 // kg / m3
-#define GRAVITY       9.81 // kg * m / s2
 
-// #include <CGAL/Simple_cartesian.h>
-// #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Kernel/global_functions.h>
-#include <CGAL/Polyhedron_3.h>
-#include <CGAL/Surface_mesh.h>
-#include <CGAL/convex_hull_3.h>
-#include <CGAL/linear_least_squares_fitting_3.h>
-
-typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-
-// typedef CGAL::Simple_cartesian<double>  K;          // redefinition to avoid name clashing with OpenCV
-typedef K::FT                           FT;       // ft
-typedef K::Ray_3                        Ray;      // ray (for vertical intersection)
-typedef K::Vector_3                     KVector;
-typedef K::Line_3                       KLine;
-typedef K::Plane_3                      KPlane;
-typedef K::Point_3                      KPoint;
-typedef K::Triangle_3                   KTriangle;
-typedef CGAL::Polyhedron_3<K>           Polyhedron_3;
-
-
-#define DEFAULT_Z_OPT  0.01  // DEFAULT value for optimal range of distance [m] along sensing axis Z (normal to the seafloor)
-#define DEFAULT_Z_SUB  0.02  // DEFAULT value for suboptimal range of distance [m] along sensing axis Z (normal to the seafloor)
-#define DEFAULT_G_DIAM 0.10  // DEFAULT value for diameter [m] of geotechnical sensor
-
+#define T2P_GRAYSCALE 1
+#define T2P_RGB       3
 
 #endif // _PROJECT_HEADERS_H_

@@ -1,6 +1,7 @@
 # Created by J. Cappelletto (cappelletto@gmail.com) for tiff2png module, part of Predicting seafloor landability
 # Ocean Perception Lab, University of Southampton
-# 2019-2021
+# All rights reserved, 2019-2022
+
 cmake_minimum_required(VERSION 3.18)  # future releases may require 3.20. Improved FindModules for GDAL, CGAL, TBB & CUDA toolkit
 
 if(NOT DEFINED CMAKE_BUILD_TYPE)
@@ -80,15 +81,13 @@ find_package(OpenCV 4.2 REQUIRED
 # in the OpenCVConfig.cmake file.
 # Print some message showing some of them
 # At this level, it should be useful to check minimum required version or exact version
-# So far, there are still some issues with OpenCV installations included in ROS
+# So far, there are still some issues with OpenCV installations included in ROS. To mitigate this, please ne sure you are defining the correct PATHS
 message(STATUS "${BoldYellow}" "OpenCV library status:" "${ColourReset}")
 message(STATUS "    version: ${OpenCV_VERSION}")
 message(STATUS "    libraries: ${OpenCV_LIBS}")
 message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 
-
 # Add submodule as external/geotiff subdirectory. But we do not want to trigger its own CMake chain, so we just set the path
-#add_subdirectory(external/geotiff)
 set (GEOTIFF_MODULE external/geotiff) # from 3rd party repository (ours, but separated for maintenance reasons)
 
 # Greedy include of all headers
@@ -98,7 +97,6 @@ include_directories(BEFORE ../include
                     ${OpenCV_INCLUDE_DIRS}
                     ${GDAL_INCLUDE_DIR}
                     ${GEOTIFF_MODULE}/include)
- #                   ${PCL_INCLUDE_DIRS})
 
 # Retrieve git commit information, forward it to compilation chain
 exec_program(
@@ -114,13 +112,7 @@ add_definitions(-DCGAL_USE_BASIC_VIEWER)
 add_executable(tiff2png   src/tiff2png.cpp
                           ${GEOTIFF_MODULE}/src/geotiff.cpp
                           src/helper.cpp
-                          # src/lad_core.cpp
-                          # src/lad_layer.cpp
-                          # src/lad_processing.cpp
-                          # src/lad_thread.cpp
-                          # src/lad_config.cpp
                           ${PROJECT_HEADERS})
-
 
 target_compile_options(tiff2png     PUBLIC -std=c++14 -mavx)
 target_link_libraries(tiff2png      ${OpenCV_LIBS} ${GDAL_LIBRARY} yaml-cpp)

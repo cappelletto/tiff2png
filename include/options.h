@@ -21,25 +21,30 @@ args::ArgumentParser argParser("","");
 args::HelpFlag 	     argHelp(argParser, "help", "Display this help menu", {'h', "help"});
 args::CompletionFlag completion(argParser, {"complete"});	//TODO: figure out why is missing in current version of args.hxx
 
-args::ValueFlag <std::string> 	argInput(argParser, "input", "Input geoTIFF image, typ bathymetry map",   {'i', "input"});
-args::ValueFlag	<std::string> 	argOutput(argParser,    "filename", "Output file",                         {'o', "output"});
-args::ValueFlag	<int> 	        argVerbose(argParser,   "verbose",  "Define verbosity level",              {'v', "verbose"});
-args::ValueFlag	<std::string> 	argExportTiff(argParser,"filename", "GeoTIFF copy of the exported image",  {'e', "export_tiff"});
+args::ValueFlag <std::string> 	argInput(argParser,     "input", "Input geoTIFF image, typ bathymetry map", {'i', "input"});
+args::ValueFlag	<std::string> 	argOutput(argParser,    "filename", "Output file",                          {'o', "output"});
+args::ValueFlag	<int> 	        argVerbose(argParser,   "verbose",  "Define verbosity level",               {'v', "verbose"});
+args::ValueFlag	<std::string> 	argExportTiff(argParser,"filename", "GeoTIFF copy of the exported image",   {'e', "export_tiff"});
+
+// File output parameters: number of channels (1-grayscale, 3-RGB) & pixel depth (8,16 bits)
+args::ValueFlag <int>           argOutputChannels(argParser, "[1|3]", "Output image channels. 1: Grayscale (default), 3: RGB", {'c', "channels"});
+args::ValueFlag <int>           argOutputBitDepth(argParser, "[8|16]", "Bits per pixel. All images are integer: 8 (default), 16", {'b', "bits"});
+
 
 // Free parameters for debugging
 args::ValueFlag	<int> 	argIntParam(argParser,  "param",    "User defined parameter INTEGER for testing purposes",  {"int"});
 args::ValueFlag	<float> argFloatParam(argParser,"param",    "User defined parameter FLOAT for testing purposes",    {"float"});
 // Sampling parameters
-args::ValueFlag	<double>        argRotation(argParser,"angle",  "Rotation angle of the ROI to be exported [degrees]",{"rotation"});
+args::ValueFlag	<double>        argRotation(argParser,"angle",  "Rotation angle of the ROI to be exported [degrees]",   {"rotation"});
 args::ValueFlag	<int>           argXOffset(argParser,"pixels", "ROI horizontal (X) offset from the input image center", {"offset_x"});
 args::ValueFlag	<int>           argYOffset(argParser,"pixels", "ROI vertical (Y) offset from the input image center",   {"offset_y"});
 args::ValueFlag	<unsigned int>  argXSize(argParser,"pixels", "ROI width (X) in pixels",                                 {"size_x"});
 args::ValueFlag	<unsigned int>  argYSize(argParser,"pixels", "ROI height (Y) in pixels",                                {"size_y"});
-args::ValueFlag	<double>        argZMax(argParser,"meters", "Maximum input value (Z). It wil be mapped to 255",      {"max_z"});
+args::ValueFlag	<double>        argZMax(argParser,"meters", "Maximum input value (Z). It wil be mapped to 255",         {"max_z"});
 // Thresholds
 args::ValueFlag	<double>        argValidThreshold(argParser,"ratio", "Minimum ratio of required valid pixels to generate PNG",{"valid_th"});
-args::Flag	         	        argGrayscale(argParser,   "",  "Export single channel 8-bit PNG instead of RGB", {"grayscale"});
-args::Flag	         	        argCsv(argParser,   "",  "Use comma ',' as column separator rather than TAB", {"csv"});
+args::Flag	         	        argGrayscale(argParser,   "",  "Export single channel 8-bit PNG instead of RGB",        {"grayscale"});
+args::Flag	         	        argCsv(argParser,   "",  "Use comma ',' as column separator rather than TAB",           {"csv"});
 // CRS and geoTIFF related flags
 args::Flag	         	        argCRS(argParser,  "",  "Switch Lat/Lon CRS from WGS84 (Earth) projection to IAU2000:49901 (Mars)", {"crs"});
 
