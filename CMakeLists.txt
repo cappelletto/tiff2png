@@ -47,6 +47,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -O3 -shared-libgcc")
 
 find_package(OpenMP)  # no alternatives provided for OpenMP as MT framework, we stick to this one
 if(OPENMP_FOUND)
+  message(STATUS "${BoldYellow}" "OpenMP found..." "${ColourReset}")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
@@ -67,10 +68,10 @@ endif()
 
 find_package(Eigen3 3 REQUIRED)	# triggered some linking issues with OpenCV4.2 (sys/ROS) and user installed OpenCV 4.5
 
-# Find OpenCV, you may need to set OpenCV_DIR variable
+# Find OpenCV, you set the OpenCV_DIR variable
 # to the absolute path to the directory containing OpenCVConfig.cmake file
-# OpenCV used for image conversion from bathmetry data to grayscale image (PNG)
-# Being honest, we could do it with 3.4.X but for future compatibility we should push to the latest LTS release (4.2)
+# OpenCV is used for image conversion from bathmetry data to grayscale image (PNG)
+# Being honest, we could do it with 3.4.X but for future compatibility we should push to the latest LTS release (4.X)
 find_package(OpenCV 4.2 REQUIRED
                         NO_MODULE
                         PATHS /usr/local
@@ -79,15 +80,15 @@ find_package(OpenCV 4.2 REQUIRED
 # If the package has been found, several variables will
 # be set, you can find the full list with descriptions
 # in the OpenCVConfig.cmake file.
-# Print some message showing some of them
 # At this level, it should be useful to check minimum required version or exact version
-# So far, there are still some issues with OpenCV installations included in ROS. To mitigate this, please ne sure you are defining the correct PATHS
+# There are still some issues with OpenCV installations included in ROS.
+# To mitigate this, please be sure you are defining the correct PATHS
 message(STATUS "${BoldYellow}" "OpenCV library status:" "${ColourReset}")
 message(STATUS "    version: ${OpenCV_VERSION}")
 message(STATUS "    libraries: ${OpenCV_LIBS}")
 message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 
-# Add submodule as external/geotiff subdirectory. But we do not want to trigger its own CMake chain, so we just set the path
+# Add external/geotiff subdirectory. We do not want to trigger its own CMake chain, so we just set the path
 set (GEOTIFF_MODULE external/geotiff) # from 3rd party repository (ours, but separated for maintenance reasons)
 
 # Greedy include of all headers
@@ -98,7 +99,7 @@ include_directories(BEFORE ../include
                     ${GDAL_INCLUDE_DIR}
                     ${GEOTIFF_MODULE}/include)
 
-# Retrieve git commit information, forward it to compilation chain
+# Retrieve git commit information, forward it to the compilation chain
 exec_program(
     "git"
     ${CMAKE_CURRENT_SOURCE_DIR}

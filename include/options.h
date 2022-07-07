@@ -13,7 +13,6 @@
 #define ERROR_WRONG_ARGUMENT    -1
 #define ERROR_MISSING_ARGUMENT  -2 
 #include "headers.h"
-// #include "lad_enum.hpp"
 #include "../external/args.hxx"
 #include <iostream>
 
@@ -34,7 +33,7 @@ args::ValueFlag <int>           argOutputBitDepth(argParser, "8|16", "Bits per p
 args::ValueFlag	<int> 	argIntParam(argParser,  "param",    "User defined parameter INTEGER for testing purposes",  {"int"});
 args::ValueFlag	<float> argFloatParam(argParser,"param",    "User defined parameter FLOAT for testing purposes",    {"float"});
 // Sampling parameters
-args::ValueFlag	<double>        argRotation(argParser,"angle",  "Rotation angle of the ROI to be exported [degrees]",   {"rotation"});
+args::ValueFlag	<double>        argRotation(argParser,"degrees",  "Rotation angle of the ROI to be exported [degrees]",   {"rotation"});
 args::ValueFlag	<int>           argXOffset(argParser,"pixels", "ROI horizontal (X) offset from the input image center", {"offset_x"});
 args::ValueFlag	<int>           argYOffset(argParser,"pixels", "ROI vertical (Y) offset from the input image center",   {"offset_y"});
 args::ValueFlag	<unsigned int>  argXSize(argParser,"pixels", "ROI width (X) in pixels",                                 {"size_x"});
@@ -57,7 +56,7 @@ args::Flag	         	        argCRS(argParser,  "",  "Switch Lat/Lon CRS from WG
 int initParser(int argc, char *argv[], string newDescription = ""){
     /* PARSER section */
     std::string descriptionString =
-        "tiff2png - image preprocessing tool for LGA + BNN based seafloor measurability predictor \
+        "tiff2png - image preprocessing tool for LGA/geoCLR + BNN based terrain inference engine \
         Partial data augmentation on demand by resampling input image, via traslation and rotation \
         Data range linear remapping with (clip-limit) is performed beore exporting as PNG image \
     Compatible interface with geoTIFF bathymetry datasets via GDAL + OpenCV";

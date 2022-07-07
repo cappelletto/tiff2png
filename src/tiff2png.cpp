@@ -349,7 +349,7 @@ int main(int argc, char *argv[])
     cv::Mat final_png;
     final.copyTo(final_png); //copy for normalization to 0-255. The source can be used to be exported as local bathymetry geoTIFF
     // 2.4) Scale to 128/max_value
-    double max_range = 65535.0/2.0;
+    double max_range = (2^bitsPerPixel)/2.0;
     double offset = max_range;
     double alfa = max_range / maxDepth; //fParam is the expected max value (higher, will be clipped)
     final_png = final_png * alfa;   // we rescale the bathymetry onto 0-255, where 255 is reached when height = fParam

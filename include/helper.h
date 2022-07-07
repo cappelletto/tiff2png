@@ -5,7 +5,7 @@
  * @version 0.2
  * @date    2020-07-03
  * 
- * @copyright Copyright (c) 2020
+ * @copyright Copyright (c) 2020-2022
  * 
  */
 #ifndef _PROJECT_HELPER_H_

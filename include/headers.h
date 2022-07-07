@@ -1,11 +1,11 @@
 /**
  * @file headers.h
- * @author Jose Cappelletto (cappelletto@gmail.com)
- * @brief Single collection of global libraries required in major modules
- * @version 0.2
+ * @author Jose Cappelletto (cappelletto@gmail.com). University of Southampton, UK
+ * @brief Single collection of libraries required for this project
+ * @version 0.3
  * @date 2020-07-03
  * 
- * @copyright Copyright (c) 2020
+ * @copyright Copyright (c) 2020-2022
  * 
  */
 #ifndef _PROJECT_HEADERS_H_
@@ -33,12 +33,6 @@
 #include "opencv2/calib3d.hpp"
 #include <opencv2/xfeatures2d.hpp>
 
-// CUDA specific libraries
-#if USE_GPU
-    #include <opencv2/cudafilters.hpp>
-    #include "opencv2/cudafeatures2d.hpp"
-    #include "opencv2/xfeatures2d/cuda.hpp"
-#endif
 #include "geotiff.hpp"
 
 // escape based colour codes for console output
