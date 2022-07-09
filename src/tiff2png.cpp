@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
             logc.error ("main", "Output file missing. Please define it using --output='filename'");
             return -1;
     }
-    if (argExportTiff) outputTIFF = args::get(argExportTiff); //extra geotiff copy to be exported
+    // if (argExportTiff) outputTIFF = args::get(argExportTiff); //extra geotiff copy to be exported
 
     //Optional arguments
     //validity threshold. Default pass all (th=0)
@@ -120,8 +120,8 @@ int main(int argc, char *argv[])
         s << "Output file format. Channels: " << outputChannels << "\tBits per pixel: " << bitsPerPixel;
         logc.info ("main" , s);
         // TODO: implement export of transformed geoTIFF. (AGAIN? I think this was already implemented in previous releases)
-        if (argExportTiff) 
-            cout << "outputTIFF:    \t" << green << outputTIFF << reset << endl;; //extra geotiff copy to be exported
+        // if (argExportTiff) 
+        //     cout << "outputTIFF:    \t" << green << outputTIFF << reset << endl;; //extra geotiff copy to be exported
         cout << "validThreshold:\t" << yellow << validThreshold << reset << endl;
         cout << "ROI Offset:    \t(" << xOffset << ", " << yOffset << ")\tRotation: \t" << rotationAngle << "deg" << endl; 
         if (xSize * ySize > 0)
@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
         brx = original.cols-1;
         bry = original.rows-1;
     }
-
+    // Validate ROI bounding boxes
     if (tlx < 0){
         logc.error("rect", "top left corner X out of range (negative)");
         return -1;
@@ -246,9 +246,22 @@ int main(int argc, char *argv[])
     }
 
     cv::Mat final;
+    if (argIntParam){ // argIntParam invoked, meaning we override rotation
+        if (verbosity>1)
+          logc.warn("main", "Xfering input image to final container, no ROI cropping/extraction");
 
-    if (!argIntParam){
-
+        // Check if source and destination image sizes are different. If so, crop the source image to size_x and size_y.
+        if ((original.cols != xSize) || (original.rows != ySize)){
+            tlx = floor((original.cols - xSize)/2);
+            tly = floor((original.rows - ySize)/2);
+            cv::Mat crop_roi (original, cv::Rect2d(tlx, tly, xSize, ySize)); // bbox of sie (xSize,ySize) centered at (tlx,tly)
+            crop_roi.copyTo(final);
+        }
+        else{
+            original.copyTo(final);
+        }
+    }
+    else{ 
         // 3/crop large extent
         cv::Mat large_roi (original, cv::Rect2d(tlx, tly, 2*diag, 2*diag)); // the bbox size is twice the diagonal
         cv::Mat large_crop;
@@ -266,27 +279,10 @@ int main(int argc, char *argv[])
         tlx = rotatedROI.cols/2 - xSize/2; // center - width 
         tly = rotatedROI.rows/2 - ySize/2; // center - height
         bbox = cv::Rect2d(tlx, tly, xSize, ySize);
-
         cv::Mat final_roi = rotatedROI(bbox); // crop the final size image, already rotated    
         final_roi.copyTo(final);
     }
-    else{ // argIntParam invoked, meaning we override rotation
-        if (verbosity>=2)
-          logc.warn("main", "Xfering input image to final container");
 
-        // Check if source and destination image sizes are different. If so, crop the source image to size_x and size_y.
-        if ((original.cols != xSize) || (original.rows != ySize)){
-            tlx = floor((original.cols - xSize)/2);
-            tly = floor((original.rows - ySize)/2);
-            cv::Mat crop_roi (original, cv::Rect2d(tlx, tly, xSize, ySize)); // the bbox size is twice the diagonal
-            crop_roi.copyTo(final);
-        }
-        else{
-            original.copyTo(final);
-        }
-    }
-
-    
     // 6/update mask: compare against nodata field
     double nodata = noDataValue;
     // let's inspect the 'final' matrix and compare against  'nodata'
@@ -294,7 +290,6 @@ int main(int argc, char *argv[])
     // nodata was replaced by ZERO when loading into the original matrix
     cv::compare(final, 0, final_mask, CMP_NE);
     // 7/normalize the mask. The actual PNG output must be scaled according to the bathymetry range param
-    // cv::normalize(final_mask, final_mask, 0, 255, NORM_MINMAX, CV_8UC1); // normalize within the expected range 0-255 for imshow
     if (verbosity>=2){
         namedWindow ("original");
         cv::normalize(original, original, 0, 255, NORM_MINMAX, CV_8UC1, mask); // normalize within the expected range 0-255 for imshow
@@ -341,8 +336,7 @@ int main(int argc, char *argv[])
     // 2.4) Scale to 255/2 (8 bits) or 65535/2 for 16 bits
     double max_range = (2^bitsPerPixel)/2.0;
     double offset = max_range;
-    double alfa = max_range / maxDepth; //fParam is the expected max value (higher, will be clipped)
-    final_png = final_png * alfa;       // we rescale the bathymetry to max range of image format, reached when z = max_z
+    final_png = final_png * (double) (max_range / maxDepth);       // Rescale terrain to fit within image format. maxDepth will match max_range
     final_png = final_png + max_range;  // 1-bit bias. The new ZERO should be in the center of the range
     if (verbosity >= 2){
         double png_mean = (double) cv::sum(final_png).val[0] / (double) (final_png.cols * final_png.rows); 
@@ -352,24 +346,22 @@ int main(int argc, char *argv[])
         cout << " / " << ((_min > 255.0) ? red : green) << _max << reset << "]" << endl;
     }
     // Step 3: use geoTransform matrix to retrieve center of map image
-    // let's use the stored transformMatrix coefficients retrieved by GDAL
     // coordinates are given as North-East positive. Vertical resolution sy (coeff[5]) can be negative
-    // as long as the whole dataset is self-consistent, any offset can be ignored, as the LGA autoencoder uses the relative distance 
-    // between image centers (it could also be for any corner when rotation is neglected)
-    // before exporting the geoTIFF, we need to correct the geotransformation matrix to reflect the x/y offset
-    // it should be mapped as a northing/easting displacemen (scaled by the resolution)
+    // as long as the whole dataset is self-consistent, analysis based on relative distance will ignore any offset (e.g. neighbour tables) 
+    // Before exporting the geoTIFF, we need to correct the geotransformation matrix to reflect the x/y offset
+    // it should be mapped as a northing/easting displacement (scaled by the resolution)
     // easting_offset -> transforMatrix[0]
     // northing_offset -> transforMatrix[3]
 
     // // this is the northing/easting in the original reference system
     double easting  = transformMatrix[0] + transformMatrix[1]*nx_east; // easting
     double northing = transformMatrix[3] + transformMatrix[5]*ny_north; // northing
-    // // easily, we can add those UTM coordinates as the new offset (careful: center ref vs corner ref)
+    // // easily, we can add those projected (UTM) coordinates as the new offset (careful: center ref vs corner ref)
     transformMatrix[0] = easting - (final.cols/2)*transformMatrix[1];
     transformMatrix[3] = northing - (final.rows/2)*transformMatrix[5];
 
-
-    if (proportion >= validThreshold){  // export if and only if it satisfies the minimum proportion of valid pixels. Set threshold to 0.0 to esport all images 
+    // Feature: do not export images with a proportion of valid pixels lower than a threshold
+    if (proportion >= validThreshold){  // Set threshold to 0.0 to export all images 
         // before exporting, we check the desired number of image channels and bits per pixel
         if (bitsPerPixel == T2P_BPP8){
             final_png.convertTo(final_png, CV_8UC1);
@@ -377,22 +369,23 @@ int main(int argc, char *argv[])
         else{
             final_png.convertTo(final_png, CV_16UC1);
         }
-        // last step: check if image needs to be converted to 3-channel (RGB-like) format
+        // check if image needs to be converted to 3-channel (RGB-like) format
         if (outputChannels == T2P_RGB){ // we need to convert to RGB
             // final_png.convertTo(final_png, CV_16UC3);
             cv::cvtColor(final_png,final_png, COLOR_GRAY2RGB);
         }
         cv::imwrite(outputFileName, final_png);
     }
-
-    // Also we need the LAT LON in decimal degree to match oplab-pipeline and LGA input format
+    // ---------------------------------------------------------------------------------------
+    // Exporting georef information to the console so it can be collected by caller scripts
+    // We need the LAT LON in decimal degree to match oplab-pipeline and LGA input format
     double latitude;
     double longitude;
-    // we need to transform from northing easting to WGS84 lat lon
+    // Transform from northing easting to WGS84 lat lon
     OGRSpatialReference refUtm;
-    refUtm.importFromProj4(layerProjection.c_str());   // original SRS
+    refUtm.importFromProj4(layerProjection.c_str());   // original SRS from source image
     OGRSpatialReference refGeo;
-
+    // If asked for, we use Mars CRS
     if (argCRS){ // switch to Mars Lat/Lon CRS IAU2000:49001
         if (verbosity > 0)
             cout << light_yellow << "Using PROJ4 CRS definition for Mars as celestial body" << endl;
@@ -434,10 +427,10 @@ int main(int argc, char *argv[])
     if (verbosity >= 1){
         // export header colums
         cout << "valid_ratio"        << separator;
-        // cout << "relative_path"     << separator; // this information is know by the caller
+        // cout << "relative_path"     << separator; // this information is know by the caller, no need to export
         cout << "northing [m]"      << separator;
         cout << "easting [m]"       << separator;
-        cout << "depth [m]"         << separator;
+        cout << "depth [m]"         << separator;   // it could be 'altitude' for topography maps
         cout << "latitude [deg]"    << separator;
         cout << "longitude [deg]"   << endl;
     }

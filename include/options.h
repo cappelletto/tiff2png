@@ -20,17 +20,17 @@ args::ArgumentParser argParser("","");
 args::HelpFlag 	     argHelp(argParser, "help", "Display this help menu", {'h', "help"});
 args::CompletionFlag completion(argParser, {"complete"});	//TODO: figure out why is missing in current version of args.hxx
 
-args::ValueFlag <std::string> 	argInput(argParser,     "input", "Input geoTIFF image, typ bathymetry map", {'i', "input"});
-args::ValueFlag	<std::string> 	argOutput(argParser,    "filename", "Output file",                          {'o', "output"});
-args::ValueFlag	<int> 	        argVerbose(argParser,   "verbose",  "Define verbosity level",               {'v', "verbose"});
-args::ValueFlag	<std::string> 	argExportTiff(argParser,"filename", "GeoTIFF copy of the exported image",   {'e', "export_tiff"});
+args::ValueFlag <std::string> 	argInput(argParser,     "input", "Input geoTIFF image that contains the terrain information", {'i', "input"});
+args::ValueFlag	<std::string> 	argOutput(argParser,    "filename", "Output PNG file",                          {'o', "output"});
+args::ValueFlag	<int> 	        argVerbose(argParser,   "verbose",  "Define verbosity level [0-2]",               {'v', "verbose"});
+// args::ValueFlag	<std::string> 	argExportTiff(argParser,"filename", "GeoTIFF copy of the exported image (experimental)",   {'e', "export_tiff"});
 
 // File output parameters: number of channels (1-grayscale, 3-RGB) & pixel depth (8,16 bits)
 args::ValueFlag <int>           argOutputChannels(argParser, "1|3", "Output image channels. 1: Grayscale (default), 3: RGB", {'c', "channels"});
 args::ValueFlag <int>           argOutputBitDepth(argParser, "8|16", "Bits per pixel. All images are integer: 8 (default), 16", {'b', "bits"});
 
 // Free parameters for debugging
-args::ValueFlag	<int> 	argIntParam(argParser,  "param",    "User defined parameter INTEGER for testing purposes",  {"int"});
+args::ValueFlag	<int> 	argIntParam(argParser,  "param",    "Enable/disable full canvas export. When enabled it will override any ROI settings",  {"int"});
 args::ValueFlag	<float> argFloatParam(argParser,"param",    "User defined parameter FLOAT for testing purposes",    {"float"});
 // Sampling parameters
 args::ValueFlag	<double>        argRotation(argParser,"degrees",  "Rotation angle of the ROI to be exported [degrees]",   {"rotation"});
