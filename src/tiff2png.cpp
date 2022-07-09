@@ -14,14 +14,10 @@
 
 #include "options.h"
 #include "geotiff.hpp" // Geotiff class definitions
-// #include "lad_core.hpp"
-// #include "lad_config.hpp"
-// #include "lad_enum.hpp"
 #include <limits>
 
 using namespace std;
 using namespace cv;
-// using namespace lad;
 
 #define NO_ERROR 0
 #define ERR_ARGUMENT -2
@@ -188,12 +184,6 @@ int main(int argc, char *argv[])
     cv::compare(rasterData, noDataValue, rasterMask, CMP_NE); // ROI at the source data level
 
 //******************************************
-
-//******************************************
-
-//******************************************
-
-
     cv::Mat original(rasterData.size(), CV_64FC1);
     cv::Mat mask = rasterMask.clone();
     rasterData.copyTo(original, mask); //copy only valid pixels, the rest should remain zero
@@ -299,7 +289,7 @@ int main(int argc, char *argv[])
     
     // 6/update mask: compare against nodata field
     double nodata = noDataValue;
-        // let's inspect the 'final' matrix and compare against  'nodata'
+    // let's inspect the 'final' matrix and compare against  'nodata'
     cv::Mat final_mask;
     // nodata was replaced by ZERO when loading into the original matrix
     cv::compare(final, 0, final_mask, CMP_NE);
@@ -348,12 +338,12 @@ int main(int argc, char *argv[])
     // duplicate for export
     cv::Mat final_png;
     final.copyTo(final_png); //copy for normalization to 0-255. The source can be used to be exported as local bathymetry geoTIFF
-    // 2.4) Scale to 128/max_value
+    // 2.4) Scale to 255/2 (8 bits) or 65535/2 for 16 bits
     double max_range = (2^bitsPerPixel)/2.0;
     double offset = max_range;
     double alfa = max_range / maxDepth; //fParam is the expected max value (higher, will be clipped)
-    final_png = final_png * alfa;   // we rescale the bathymetry onto 0-255, where 255 is reached when height = fParam
-    final_png = final_png + max_range; // 1-bit bias. The new ZERO should be in 127
+    final_png = final_png * alfa;       // we rescale the bathymetry to max range of image format, reached when z = max_z
+    final_png = final_png + max_range;  // 1-bit bias. The new ZERO should be in the center of the range
     if (verbosity >= 2){
         double png_mean = (double) cv::sum(final_png).val[0] / (double) (final_png.cols * final_png.rows); 
         cv::minMaxLoc (final_png, &_min, &_max, 0, 0, final_mask); //debug
@@ -387,13 +377,11 @@ int main(int argc, char *argv[])
         else{
             final_png.convertTo(final_png, CV_16UC1);
         }
-
         // last step: check if image needs to be converted to 3-channel (RGB-like) format
         if (outputChannels == T2P_RGB){ // we need to convert to RGB
             // final_png.convertTo(final_png, CV_16UC3);
             cv::cvtColor(final_png,final_png, COLOR_GRAY2RGB);
         }
-
         cv::imwrite(outputFileName, final_png);
     }
 
@@ -406,7 +394,8 @@ int main(int argc, char *argv[])
     OGRSpatialReference refGeo;
 
     if (argCRS){ // switch to Mars Lat/Lon CRS IAU2000:49001
-        cout << light_yellow << "Using PROJ4 CRS definition for Mars as celestial body" << endl;
+        if (verbosity > 0)
+            cout << light_yellow << "Using PROJ4 CRS definition for Mars as celestial body" << endl;
         // +proj=longlat +a=3396190 +rf=169.894447223612 +no_defs +type=crs
         // const char *crsIAU2000_49900 = "GEOGCRS["Mars 2000",
         // DATUM["D_Mars_2000",
@@ -427,11 +416,10 @@ int main(int argc, char *argv[])
         refGeo.importFromProj4("+proj=longlat +a=3396190 +rf=169.894447223612 +no_defs +type=crs");
     }
     else{
-       refGeo.SetWellKnownGeogCS("WGS84"); // target CRS: Earth - default
+        refGeo.SetWellKnownGeogCS("WGS84"); // target CRS: Earth - default
     }
 
     OGRCoordinateTransformation* coordTrans = OGRCreateCoordinateTransformation(&refUtm, &refGeo); // ask for a SRS transforming object
-
     double x = easting;
     double y = northing;
     
@@ -440,28 +428,6 @@ int main(int argc, char *argv[])
     latitude  = y; // yes, this is not a bug, they are swapped 
     longitude = x;
     delete coordTrans; // maybe can be removed as destructor and garbage collector will take care of this after return
-    // Target HEADER (CSV)
-    // relative_path	northing [m]	easting [m]	depth [m]	roll [deg]	pitch [deg]	heading [deg]	altitude [m]	timestamp [s]	latitude [deg]	longitude [deg]	x_velocity [m/s]	y_velocity [m/s]	z_velocity [m/s]
-    // relative_path    ABSOLUT OR RELATIVE URI
-    // northing [m]     UTM northing (easy to retrieve from geoTIFF)
-    // easting [m]      UTM easting (easy to retrieve from geoTIFF)
-    // depth [m]        Mean B0 bathymetry patch depth
-    // roll [deg]       zero, orthografically projected depthmap
-    // pitch [deg]      zero, same as roll
-    // heading [deg]    default zero, can be modified by rotating the croping window during gdal_retile.py
-    // altitude [m]     fixed to some typ. positive value (e.g. 6). Orthographic projection doesn't need image-like treatment
-    // timestamp [s]    faked data
-    // latitude [deg]   decimal degree latitude, calculated from geotiff metadata
-    // longitude [deg]  decimal degree longitude, calculated from geotiff metadata
-    // x_velocity [m/s] faked data - optional
-    // y_velocity [m/s] faked data - optional
-    // z_velocity [m/s] faked data - optional
-    // **********************************************************************************
-    // This is the format required by LGA as raw input for 'lga sampling'
-    // This first step will produce a prefiltered file list with this header (CSV)
-    // <ID>,relative_path,altitude [m],roll [deg],pitch [deg],northing [m],easting [m],depth [m],heading [deg],timestamp [s],latitude [deg],longitude [deg]
-    // >> filename: [sampled_images.csv] let's create a similar file using the exported data from this file, and merged in the bash caller
-
     String separator = "\t"; 
     if (argCsv) separator = ",";
 
@@ -483,8 +449,5 @@ int main(int argc, char *argv[])
     cout << latitude    << separator;   // mean depth for the current bathymety patch
     cout << longitude   << separator;   // mean depth for the current bathymety patch
     cout << endl;
-
-    // if (verbosity > 0)
-    //     tic.lap("");
     return NO_ERROR;
 }
