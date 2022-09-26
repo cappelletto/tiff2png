@@ -19,6 +19,8 @@
 using namespace std;
 using namespace cv;
 
+#define COPY_ONLY_MODE 3
+
 #define NO_ERROR 0
 #define ERR_ARGUMENT -2
 logger::ConsoleOutput logc;
@@ -79,6 +81,8 @@ int main(int argc, char *argv[])
     if (argXSize) xSize = args::get(argXSize); // any value is valid. No validation is required
     unsigned int ySize = 227; // vertical, column wise (positive down)
     if (argYSize) ySize = args::get(argYSize); // any value is valid. No validation is required
+    int argInteger = 0;
+    if (argIntParam) argInteger = args::get(argIntParam); // any value is valid. No validation is required
 
     int bitsPerPixel = T2P_BPP8;
     if (argOutputBitDepth){
@@ -315,7 +319,8 @@ int main(int argc, char *argv[])
         cout << light_yellow << "RAW bathymetry - \t" << reset << "MIN / MEAN / MAX = [" << _min << " / " << _mean << " / " << _max << "]" << endl;
     }
     // 2.2) Shift the whole map to the mean (=0)
-    cv::subtract(final, _mean, final, final_mask); // MEAN centering of only valida data points (use mask)
+    if (argInteger != COPY_ONLY_MODE)
+        cv::subtract(final, _mean, final, final_mask); // MEAN centering of only valida data points (use mask)
     // show debug
     if (verbosity >= 2){
         // cv::normalize(final, final, 0, 255, NORM_MINMAX, CV_8UC1, final_mask); // normalize within the expected range 0-255 for imshow
@@ -336,8 +341,11 @@ int main(int argc, char *argv[])
     // 2.4) Scale to 255/2 (8 bits) or 65535/2 for 16 bits
     double max_range = (2^bitsPerPixel)/2.0;
     double offset = max_range;
-    final_png = final_png * (double) (max_range / maxDepth);       // Rescale terrain to fit within image format. maxDepth will match max_range
-    final_png = final_png + max_range;  // 1-bit bias. The new ZERO should be in the center of the range
+    if (argInteger != COPY_ONLY_MODE)
+    {   
+        final_png = final_png * (double) (max_range / maxDepth);       // Rescale terrain to fit within image format. maxDepth will match max_range
+        final_png = final_png + max_range;  // 1-bit bias. The new ZERO should be in the center of the range
+    }
     if (verbosity >= 2){
         double png_mean = (double) cv::sum(final_png).val[0] / (double) (final_png.cols * final_png.rows); 
         cv::minMaxLoc (final_png, &_min, &_max, 0, 0, final_mask); //debug
