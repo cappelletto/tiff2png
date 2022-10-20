@@ -118,14 +118,14 @@ fn_convert_file (){
 	echo -e "$colour_reset Rotation: $local_rotation \tOffset: $x_offset / $y_offset"
 
 	# T2PARGS="--input=$file --output=$fullname_png --export_tiff=$fullname_tiff --max_z=$SCALE --rotation=$local_rotation --offset_x=$x_offset --offset_y=$y_offset"
-	T2PARGS="--input=$file --output=$fullname_png --max_z=$SCALE --rotation=$local_rotation --offset_x=$x_offset --offset_y=$y_offset --grayscale"
-	RESULT=$(tiff2png ${T2PARGS} --int=1 --csv  --valid_th=0.5 --size_x=227 --size_y=227 --crs)
+	T2PARGS="--input=$file --output=$fullname_png --max_z=$SCALE --rotation=$local_rotation --offset_x=$x_offset --offset_y=$y_offset"
+	RESULT=$(tiff2png ${T2PARGS} --int=1 --csv  --valid_th=0.5 --size_x=227 --size_y=227 --bits=16)
     
 	# RESULT string may (or may not) contain PROJ1 warning information from OGR driver
 	RESULT=$(sed 's/.*celestial body//g' <<< $RESULT)
 
 	# Apparently, there is  stray TAB or separator by the end of RESULT
-	TOTAL_STRING="${fullname_png}${SEP}${RESULT}42.0${SEP}0.0${SEP}0.0${SEP}0.0${SEP}1"
+	TOTAL_STRING="${fullname_png}${SEP}${RESULT}138.0${SEP}0.0${SEP}0.0${SEP}0.0${SEP}1"
 	echo -e $TOTAL_STRING | grep -v -i error >> $2
 	echo -e $TOTAL_STRING | grep -i error >> error.log
 }

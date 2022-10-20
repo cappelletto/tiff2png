@@ -320,7 +320,13 @@ int main(int argc, char *argv[])
     }
     // 2.2) Shift the whole map to the mean (=0)
     if (argInteger != COPY_ONLY_MODE)
+    {
         cv::subtract(final, _mean, final, final_mask); // MEAN centering of only valida data points (use mask)
+        if (verbosity>=2) // print mean substraction message
+        {
+            cout << light_purple << "Substracting mean value from bathymetry: " << reset << _mean << endl;
+        }
+    }
     // show debug
     if (verbosity >= 2){
         // cv::normalize(final, final, 0, 255, NORM_MINMAX, CV_8UC1, final_mask); // normalize within the expected range 0-255 for imshow
@@ -339,12 +345,13 @@ int main(int argc, char *argv[])
     cv::Mat final_png;
     final.copyTo(final_png); //copy for normalization to 0-255. The source can be used to be exported as local bathymetry geoTIFF
     // 2.4) Scale to 255/2 (8 bits) or 65535/2 for 16 bits
-    double max_range = (2^bitsPerPixel)/2.0;
+    double max_range = (1<<bitsPerPixel)/2.0;
     double offset = max_range;
     if (argInteger != COPY_ONLY_MODE)
     {   
         final_png = final_png * (double) (max_range / maxDepth);       // Rescale terrain to fit within image format. maxDepth will match max_range
         final_png = final_png + max_range;  // 1-bit bias. The new ZERO should be in the center of the range
+        cout << light_green << "Rescaling bathymetry to fit within " << bitsPerPixel << " bits: " << reset << max_range << endl;
     }
     if (verbosity >= 2){
         double png_mean = (double) cv::sum(final_png).val[0] / (double) (final_png.cols * final_png.rows); 
