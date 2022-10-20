@@ -1,3 +1,6 @@
+# Temp build
+build/
+
 # Prerequisites
 *.d
 
