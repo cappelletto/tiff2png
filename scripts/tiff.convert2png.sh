@@ -119,7 +119,7 @@ fn_convert_file (){
 
 	# T2PARGS="--input=$file --output=$fullname_png --export_tiff=$fullname_tiff --max_z=$SCALE --rotation=$local_rotation --offset_x=$x_offset --offset_y=$y_offset"
 	T2PARGS="--input=$file --output=$fullname_png --max_z=$SCALE --rotation=$local_rotation --offset_x=$x_offset --offset_y=$y_offset"
-	RESULT=$(tiff2png ${T2PARGS} --int=1 --csv  --valid_th=0.5 --size_x=227 --size_y=227 --bits=16)
+	RESULT=$(tiff2png ${T2PARGS} --int=1 --csv  --valid_th=0.5 --size_x=227 --size_y=227 --bits=16 --channels=3)
     
 	# RESULT string may (or may not) contain PROJ1 warning information from OGR driver
 	RESULT=$(sed 's/.*celestial body//g' <<< $RESULT)
@@ -136,7 +136,7 @@ mkdir -p $OUTPUT_PATH
 
 # STEP 1: find all tif/tiff files in the input path
 FILE_LIST=$(find $INPUT_PATH -name '*.tif*') ## careful, should case insensitive
-echo -n -e "relative_path${SEP}valid_ratio${SEP}northing [m]${SEP}easting [m]${SEP}depth [m]${SEP}latitude [deg]${SEP}longitude [deg]" > $OUTPUT_LIST
+echo -n -e "relative_path${SEP}valid_ratio${SEP}northing [m]${SEP}easting [m]${SEP}depth [m]${SEP}longitude [deg]${SEP}latitude [deg]" > $OUTPUT_LIST
 echo -e "${SEP}altitude [m]${SEP}roll [deg]${SEP}pitch [deg]${SEP}heading [deg]${SEP}timestamp [s]" >> $OUTPUT_LIST
 # TODO: add UUID counter per row (fully compatible with Takaki's LGA)
 # dispatch for each file in FILE_LIST
