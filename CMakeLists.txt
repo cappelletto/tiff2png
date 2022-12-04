@@ -71,9 +71,9 @@ find_package(Eigen3 3 REQUIRED)	# triggered some linking issues with OpenCV4.2 (
 # Find OpenCV, you set the OpenCV_DIR variable
 # to the absolute path to the directory containing OpenCVConfig.cmake file
 # OpenCV is used for image conversion from bathmetry data to grayscale image (PNG)
-find_package(OpenCV 4.2 REQUIRED
+find_package(OpenCV 4 REQUIRED
                         NO_MODULE
-                        PATHS /usr/local /usr/local/lib/cmake/opencv4
+                        PATHS /usr/local/lib/cmake/opencv4 /usr/local
                         NO_DEFAULT_PATH)
 
 # If the package has been found, several variables will
