@@ -30,6 +30,9 @@ jobs:
       # Install OpenCV specific deps
       run: sudo apt-get install libopencv-contrib-dev libopencv-core-dev libopencv-imgcodecs-dev
 
+    - name: Print post-installation information
+      run: locate opencv | grep cmake
+
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
