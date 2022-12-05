@@ -21,10 +21,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        submodules: 'true'
 
     - name: OS Dependencies
       # Install OS wide dependencies
-      run: sudo apt-get install libgdal-dev libeigen3-dev
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgdal-dev libeigen3-dev
 
     - name: Install OpenCV
       # Install OpenCV specific deps
