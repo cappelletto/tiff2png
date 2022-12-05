@@ -1,3 +1,5 @@
+![build](https://github.com/cappelletto/tiff2png/actions/workflows/cmake.yml/badge.svg)
+
 # tiff2png
 Stand-alone module that converts geoTIFF images into 8/16 bit PNG format. Used as part of the preprocessing step for terrain feature extraction. The terrain information (topo-bathymetry) is centered by substracting its mean value and then scaled according to the user-defined parameter __max_z__. Depending on the output resolution, the maximum value will be mapped to 255 (8 bits PNG) or 65535 (16 bits PNG). Additional parameters allow defining a ROI from the input file that will be extracted and converted.
 
@@ -12,13 +14,18 @@ Start with installing the following dependencies:
 
 * OpenCV 4.X: 
 ```
-sudo apt install libopencv-dev
+sudo apt install libopencv-contrib-dev libopencv-core-dev libopencv-imgcodecs-dev libopencv-dev
 ```
 
 * GDAL 2.X, 3.X
 ```
-sudo apt install libgdal-dev
+sudo apt install libgdal-dev -y
 ```
+* yaml-cpp
+```
+sudo apt install libyaml-cpp-dev -y
+```
+
 ___Note:___ if you have installed OpenCV of GDAL from a different source (e.g. locally compiled), you can still use it defining their corresponding installation paths when running __cmake__
 
 Then proceed to clone this repository:
