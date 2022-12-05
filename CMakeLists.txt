@@ -67,13 +67,12 @@ else()
 endif()
 
 find_package(Eigen3 3 REQUIRED)	# triggered some linking issues with OpenCV4.2 (sys/ROS) and user installed OpenCV 4.5
-
-# Find OpenCV, you set the OpenCV_DIR variable
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
 # to the absolute path to the directory containing OpenCVConfig.cmake file
 # OpenCV is used for image conversion from bathmetry data to grayscale image (PNG)
-find_package(OpenCV 4 REQUIRED
+find_package(OpenCV 4   REQUIRED
                         NO_MODULE
-                        PATHS /usr/local/lib/cmake/opencv4 /usr/local
+                        PATHS /usr/lib/x86_64-linux-gnu/cmake/opencv4 /usr/local/lib/cmake/opencv4 /usr/local
                         NO_DEFAULT_PATH)
 
 # If the package has been found, several variables will
