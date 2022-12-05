@@ -1,10 +1,13 @@
 name: CMake
 
 on:
+  # Run CI on push if commit message contains [ci]
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    branches: ["master"]    
+  # push:    
+  #   branches: [ "master" ]
+  # pull_request:
+  #   branches: [ "master" ]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -18,6 +21,8 @@ jobs:
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-latest
+    if: | 
+      "contains(github.event.head_commit.message, '[ci]')"
 
     steps:
     - uses: actions/checkout@v3
