@@ -4,15 +4,15 @@
  * @brief Single collection of libraries required for this project
  * @version 0.3
  * @date 2020-07-03
- * 
+ *
  * @copyright Copyright (c) 2020-2022
- * 
+ *
  */
 #ifndef _PROJECT_HEADERS_H_
 
 #define _PROJECT_HEADERS_H_
 
-///Basic C and C++ libraries
+/// Basic C and C++ libraries
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -28,10 +28,6 @@
 #include "opencv2/core/ocl.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/highgui.hpp"
-// #include <opencv2/video.hpp>
-#include <opencv2/features2d.hpp>
-// #include "opencv2/calib3d.hpp"
-//#include <opencv2/xfeatures2d.hpp>
 
 #include "geotiff.hpp"
 
@@ -53,7 +49,7 @@ const std::string light_cyan("\033[0;36m");
 const std::string reset("\033[0m");
 const std::string highlight("\033[30;43m");
 
-#define LO_NPART  5 //number of partitions of LO_PROTRUSION height map
+#define LO_NPART 5 // number of partitions of LO_PROTRUSION height map
 #define DEFAULT_NTHREADS 12
 
 #define DEFAULT_OUTPUT_FILE "LAD_output.tif"
@@ -61,9 +57,9 @@ const std::string highlight("\033[30;43m");
 #define DEFAULT_WINDOW_HEIGHT 600
 
 #define T2P_GRAYSCALE 1
-#define T2P_RGB       3
+#define T2P_RGB 3
 
-#define T2P_BPP8    8
-#define T2P_BPP16   16
+#define T2P_BPP8 8
+#define T2P_BPP16 16
 
 #endif // _PROJECT_HEADERS_H_
